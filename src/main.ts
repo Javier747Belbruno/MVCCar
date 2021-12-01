@@ -1,4 +1,10 @@
-import * as THREE from 'three';
+import {Controller} from "./controller";
+
+// call the controller
+var c = new Controller();
+c.start(); 
+
+/*import * as THREE from 'three';
 import * as CANNON from 'cannon-es-control';
 import {GUI} from 'dat.gui';
 
@@ -87,9 +93,9 @@ var sunlight = new THREE.DirectionalLight(0xffffff, 1.0);
 sunlight.position.set(-10, 10, 0);
 scene.add(sunlight)
 
-/**
-* Physics
-**/
+
+//Physics
+
 
 world = new CANNON.World();
 world.broadphase = new CANNON.SAPBroadphase(world);
@@ -392,7 +398,7 @@ function executeMoves(){
       //fix here  
       if(key==32 || key==68 || key==87 ){
       value.funcUnPress();
-      }
+      }s
     }
   }
 }
@@ -476,7 +482,7 @@ if(stateProgram==2){
   render();
 }
 
-
-
-
 }
+
+*/
+

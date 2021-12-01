@@ -2,9 +2,10 @@
   "name": "vite-project",
   "version": "0.0.0",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite preview --port 8081",
     "build": "tsc && vite build",
-    "serve": "vite preview"
+    "serve": "vite preview --port 8080",
+    "build-serve": "tsc && vite build && vite preview --port 8080"
   },
   "devDependencies": {
     "@types/dat.gui": "^0.7.6",
