@@ -5,6 +5,7 @@ import { GUI } from 'dat.gui';
 
 import {UserInterface} from './userInterface';
 import { World } from './Entities/world';
+import io from 'socket.io-client';
 
 export class Controller {
 
@@ -46,6 +47,14 @@ export class Controller {
     public init() {
 
 
+        const socketProtocol = (window.location.protocol.includes('https')) ? 'wss' : 'ws';
+        const socket = io(`${socketProtocol}://localhost:3000`, { reconnection: false });
+        //const connectedPromise = new Promise<void>(resolve => {
+        socket.on('connect', () => {
+            console.log('Connected to server!');
+            //resolve();
+        });
+        //});
     
         var geometry = new THREE.PlaneGeometry(10, 10, 10);
         var material = new THREE.MeshBasicMaterial({ color: 0xcc1122, side: THREE.DoubleSide });
