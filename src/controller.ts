@@ -4,7 +4,7 @@ import * as CANNON from 'cannon-es-control';
 import { GUI } from 'dat.gui';
 
 import {UserInterface} from './userInterface';
-
+import { World } from './Entities/world';
 
 export class Controller {
 
@@ -13,7 +13,7 @@ export class Controller {
     scene: THREE.Scene = new THREE.Scene();
     box!: THREE.Mesh;
     vehicle!: CANNON.RaycastVehicle;
-    world!: CANNON.World;
+    world: World = new World();
     chassisBody!: CANNON.Body;
     wheelBodies: CANNON.Body[] = [];
     wheelVisuals: any = [];
@@ -65,14 +65,14 @@ export class Controller {
         sunlight.position.set(-10, 10, 0);
         this.scene.add(sunlight)
 
-        /**
-        * Physics
-        **/
+        
+        //Physics
 
-        this.world = new CANNON.World();
-        this.world.broadphase = new CANNON.SAPBroadphase(this.world);
-        this.world.gravity.set(0, -9.81, 0);
-        this.world.defaultContactMaterial.friction = 0;
+
+        this.world.worldCANNON = new CANNON.World();
+        this.world.worldCANNON.broadphase = new CANNON.SAPBroadphase(this.world.worldCANNON);
+        this.world.worldCANNON.gravity.set(0, -9.81, 0);
+        this.world.worldCANNON.defaultContactMaterial.friction = 0;
 
         var groundMaterial = new CANNON.Material('groundMaterial');
         var wheelMaterial = new CANNON.Material('wheelMaterial');
@@ -84,14 +84,14 @@ export class Controller {
             frictionEquationStiffness: 1e2
         });
 
-        this.world.addContactMaterial(wheelGroundContactMaterial);
+        this.world.worldCANNON.addContactMaterial(wheelGroundContactMaterial);
 
         // car physics body
         var chassisShape = new CANNON.Box(new CANNON.Vec3(1, 0.3, 2));
         this.chassisBody = new CANNON.Body({ mass: 1600 });
         this.chassisBody.addShape(chassisShape);
         this.chassisBody.position.set(0, 1, 0);
-        this.chassisBody.angularVelocity.set(5,1, 0.3); // initial velocity
+        this.chassisBody.angularVelocity.set(0,0, 0); // initial velocity
 
         //Grid Helper
         const gridHelper = new THREE.GridHelper(500, 100);
@@ -127,11 +127,12 @@ export class Controller {
             dampingRelaxation: 2.3,
             dampingCompression: 4.5,
             maxSuspensionForce: 200000,
-            rollInfluence: 0.01,
+            rollInfluence: 0.1,
             axleLocal: new CANNON.Vec3(-1, 0, 0),
             chassisConnectionPointLocal: new CANNON.Vec3(1, 1, 0),
             maxSuspensionTravel: 0.3,
-            customSlidingRotationalSpeed: -1,
+            //customSlidingRotationalSpeed: -1,
+            customSlidingRotationalSpeed: -10,
             useCustomSlidingRotationalSpeed: true,
         };
 
@@ -148,7 +149,7 @@ export class Controller {
         options.chassisConnectionPointLocal.set(-axlewidth, 0, 1);
         this.vehicle.addWheel(options);
 
-        this.vehicle.addToWorld(this.world);
+        this.vehicle.addToWorld(this.world.worldCANNON);
 
         // car wheels
 
@@ -174,7 +175,7 @@ export class Controller {
         });
 
         // update the wheels to match the physics
-        this.world.addEventListener('postStep',  () => {
+        this.world.worldCANNON.addEventListener('postStep',  () => {
             for (var i = 0; i < this.vehicle.wheelInfos.length; i++) {
                 this.vehicle.updateWheelTransform(i);
                 var t = this.vehicle.wheelInfos[i].worldTransform;
@@ -194,7 +195,7 @@ export class Controller {
             shape: new CANNON.Plane(),
             quaternion: new CANNON.Quaternion(-q.x, q.y, q.z, q.w)
         });
-        this.world.addBody(planeBody);
+        this.world.worldCANNON.addBody(planeBody);
 
     }
     public getRenderer(): THREE.Renderer {
@@ -362,7 +363,7 @@ export class Controller {
         //DidYouWin();
     }
     private updatePhysics(){
-        this.world.step(1 / 60);
+        this.world.worldCANNON.step(1 / 60);
         // update the chassis position
         this.box.position.copy(new THREE.Vector3(this.chassisBody.position.x, this.chassisBody.position.y, this.chassisBody.position.z));
         this.box.quaternion.copy(new THREE.Quaternion(this.chassisBody.quaternion.x, this.chassisBody.quaternion.y, this.chassisBody.quaternion.z, this.chassisBody.quaternion.w));
@@ -383,28 +384,6 @@ export class Controller {
         }
     }
     public navigate(e: KeyboardEvent) {
-        console.log(e);/*
-        console.log(this.camera.position.y);
-        if (e == 87) {
-        this.camera.position.y = this.camera.position.y + 0.1;}
-        if(e == 83){
-            this.camera.position.y = this.camera.position.y - 0.1;
-        }
-        if(e == 65){
-            this.camera.position.x = this.camera.position.x - 0.1;
-        }
-        if(e == 68){
-            this.camera.position.x = this.camera.position.x + 0.1;  
-        }
-        if(e == 69){
-            this.camera.position.z = this.camera.position.z + 0.1;
-        }
-        if(e == 81){
-            this.camera.position.z = this.camera.position.z - 0.1;
-        }  
-         if(e == 38){    //accelerate 
-            this.EngineForceVal(-3000);
-         }*/
        if (e.type == 'keydown') {
             if (this.controllerMap.get(e.keyCode)) {
                 this.controllerMap.set(e.keyCode, { pressed: true, funcPress: this.controllerMap.get(e.keyCode)!.funcPress, funcUnPress: this.controllerMap.get(e.keyCode)!.funcUnPress });

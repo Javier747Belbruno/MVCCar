@@ -3,20 +3,19 @@ import {Controller} from "./controller";
 
 export class UserInterface {
     
-    start(c: Controller) {
-        
-      
+    container = <HTMLDivElement>document.querySelector('#app');
+    sim_menu = <HTMLElement>document.querySelector('#sim-menu');
+    sim_Button = <HTMLElement>document.getElementById('sim-button');
+    free_drive_Button = <HTMLElement>document.getElementById('free-drive-button');
+    infoHtmlElement = <HTMLDivElement>document.querySelector('#info');
 
-        var container = <HTMLDivElement>document.querySelector('#app');
-        const sim_menu = <HTMLDivElement>document.querySelector('#sim-menu');
-        const sim_Button = document.getElementById('sim-button');
-        const free_drive_Button = document.getElementById('free-drive-button');
-        //var infoHtmlElement = <HTMLDivElement>document.querySelector('#info');
+    start(c: Controller) {
+    
         
-        var w = container.clientWidth, h = container.clientHeight;
+        var w = this.container.clientWidth, h = this.container.clientHeight;
 
         var renderer =  c.getRenderer();
-        container?.appendChild(renderer.domElement);
+        this.container?.appendChild(renderer.domElement);
 
         /*window.addEventListener('resize', function () {
             w = container?.clientHeight;
@@ -33,19 +32,20 @@ export class UserInterface {
         window.addEventListener('keyup', navigate);
 
         c.simulation(w,h);
-        if(free_drive_Button){
-            free_drive_Button.addEventListener('click', function (){ 
-                c.simulation(w,h);
-                sim_menu.classList.add('hidden');});
+        if(this.free_drive_Button){
+            this.sim_menu.classList.add('hidden');
+            this.free_drive_Button.addEventListener('click', function (){ 
+                c.simulation(w,h);});
+                
             }
     
-            if(sim_Button){
-            sim_Button.addEventListener('click', function (){ 
+            if(this.sim_Button){
+                this.sim_menu.classList.add('hidden');
+                this.sim_Button.addEventListener('click', function (){ 
                 c.simulation(w,h);
-                sim_menu.classList.add('hidden');});
+                });
             }
 
-        //c.start();
     }
     
     
