@@ -131,7 +131,6 @@ export class Controller {
             axleLocal: new CANNON.Vec3(-1, 0, 0),
             chassisConnectionPointLocal: new CANNON.Vec3(1, 1, 0),
             maxSuspensionTravel: 0.3,
-            //customSlidingRotationalSpeed: -1,
             customSlidingRotationalSpeed: -10,
             useCustomSlidingRotationalSpeed: true,
         };
@@ -210,19 +209,11 @@ export class Controller {
         this.renderer.setPixelRatio(window.devicePixelRatio);
         this.renderer.setSize(w, h); 
 
-
-
-        //var initialTime: number;
-
-
         //DAT GUI
         var gui = new GUI();
 
 
         this.init();
-
-        
-        
 
         this.controllerMap.set(87, { pressed: false, funcPress: this.forward.bind(this), funcUnPress: this.NotEngineForce.bind(this) });
         this.controllerMap.set(32, { pressed: false, funcPress: this.brake.bind(this), funcUnPress: this.unbrake.bind(this) });
@@ -248,88 +239,12 @@ export class Controller {
             constFolder.open();
         };
 
-        /*var P, I, D = 0;
-
-        var ek_1 = 0;
-        var dt = 1 / 60;
-        var int = 0;
-        var u = 0;*/
-
-        /*const PID_Controller = () => {
-            var refZ = this.chassisBody.position.z;
-            var pointZ = point.z;
-            //err = Expected Output - Actual Output;
-            var e = refZ - pointZ;
-
-            //Proptional action
-            P = constantsControl.Kp * e;
-            //Differential action
-            D = constantsControl.Kd * (e - ek_1) / dt;
-            //Integral action
-            I = constantsControl.Ki * int * dt;
-            // u = Kp * err + (Ki * int * dt) + (Kd * der /dt) //Action
-            u = P + I + D; //I
-
-            EngineForceVal(u);
-
-            //der  = err - err from previous loop; ( i.e. differential error)
-            ek_1 = e;
-            //int  = int from previous loop + err; ( i.e. integral error )
-            int = int + e;
-        }*/
-
-
 
         const phyFolder = gui.addFolder("Car Constants");
         phyFolder.add(this.carConst, "engineForceLimit", 0, 10000, 10);
         phyFolder.add(this.carConst, "SteeringValLimit", 0, 1, 0.01);
         phyFolder.add(this.carConst, "brakeForceLimit", 0, 1000, 10);
         phyFolder.open();
-
-        
-
-
-
-
-
-        /*
-
-        const updatePhysics = () => {
-            this.world.step(1 / 60);
-            // update the chassis position
-            this.box.position.copy(new THREE.Vector3(this.chassisBody.position.x, this.chassisBody.position.y, this.chassisBody.position.z));
-            this.box.quaternion.copy(new THREE.Quaternion(this.chassisBody.quaternion.x, this.chassisBody.quaternion.y, this.chassisBody.quaternion.z, chassisBody.quaternion.w));
-        }*/
-
- 
-
-
-
-        //var winnerInfo = '';
-        /*const UpdateInfo = () => {
-            CurrentTime = String((Date.now() - initialTime) / 1000);
-            infoHtmlElement.innerText = "Signal: " + String(Math.round(u))
-                + "\n" + "EngineForce Left Rear Wheel:" + String(Math.round(this.vehicle.wheelInfos[2].engineForce))
-                + "\n" + "EngineForce Right Rear Wheel:" + String(Math.round(this.vehicle.wheelInfos[3].engineForce))
-                + "\n" + "Steering:" + String(this.vehicle.wheelInfos[2].steering)
-                + "\n" + "Body Position:  x: " + String(Math.round(this.vehicle.chassisBody.position.x)) + ", y: " + String(Math.round(this.vehicle.chassisBody.position.y)) + " , z: " + String(Math.round(this.vehicle.chassisBody.position.z))
-                + "\n" + "Vehicle.sliding:" + String(this.vehicle.sliding)
-                + "\n" + "ChassisBody.velocity  x: " + String(Math.round(this.vehicle.chassisBody.velocity.x)) + ", y: " + String(Math.round(this.vehicle.chassisBody.velocity.y)) + " , z: " + String(Math.round(this.vehicle.chassisBody.velocity.z))
-                + "\n" + "Time (Seconds): " + CurrentTime;
-            + winnerInfo
-                ;
-        }*/
-
-        //var winningTime = "timeless";
-        /*const DidYouWin = () => {
-            if (winningTime == "timeless") {
-                if (Math.round(this.vehicle.chassisBody.velocity.z) == 0 && Math.round(this.vehicle.chassisBody.position.z) == 100) {
-                    winningTime = CurrentTime;
-                    winnerInfo = "\n" + "Winning Time (Seconds): " + winningTime;
-                    window.alert(winnerInfo);
-                }
-            }
-        }*/
 
 
 
@@ -350,18 +265,13 @@ export class Controller {
     }
     
     public render() {
-        //this.EngineForceValue(-3000);
-        //this.vehicle.wheelInfos[2].engineForce = -3000;
-        //console.log("render");
         requestAnimationFrame(this.render.bind(this));
         this.executeMoves();
-        //if (this.stateProgram == 2) { PID_Controller(); }
         this.Camera();
         this.renderer.render(this.scene, this.camera);
         this.updatePhysics();
-        //UpdateInfo();
-        //DidYouWin();
     }
+    
     private updatePhysics(){
         this.world.worldCANNON.step(1 / 60);
         // update the chassis position
