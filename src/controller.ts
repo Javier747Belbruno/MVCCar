@@ -21,7 +21,14 @@ export class Controller {
     stateProgram = 1; //0 Start Screen.  //1 Free Drive. //2 PIDController.
     cameraOption = 2; //1 Chase Camera // 2 Chase Camera Side.  
     controllerMap: Map<number,{ pressed: boolean, funcPress: Function, funcUnPress: Function}> = new Map<number,{ pressed: boolean, funcPress: Function, funcUnPress: Function}>();
-    
+    carConst = {
+        //Motor Force Limit.
+        engineForceLimit: 3000,
+        //Angle Steering.
+        SteeringValLimit: 0.3,
+        //Brake Force.
+        brakeForceLimit: 200
+    };
 
     public Controller(): void {    
         
@@ -216,11 +223,11 @@ export class Controller {
         
         
 
-        this.controllerMap.set(87, { pressed: false, funcPress: forward, funcUnPress: NotEngineForce });
-        this.controllerMap.set(32, { pressed: false, funcPress: brake, funcUnPress: unbrake });
-        this.controllerMap.set(83, { pressed: false, funcPress: backward, funcUnPress: NotEngineForce });
-        this.controllerMap.set(68, { pressed: false, funcPress: right, funcUnPress: releaseSteering });
-        this.controllerMap.set(65, { pressed: false, funcPress: left, funcUnPress: releaseSteering });
+        this.controllerMap.set(87, { pressed: false, funcPress: this.forward.bind(this), funcUnPress: this.NotEngineForce.bind(this) });
+        this.controllerMap.set(32, { pressed: false, funcPress: this.brake.bind(this), funcUnPress: this.unbrake.bind(this) });
+        this.controllerMap.set(83, { pressed: false, funcPress: this.backward.bind(this), funcUnPress: this.NotEngineForce.bind(this) });
+        this.controllerMap.set(68, { pressed: false, funcPress: this.right.bind(this), funcUnPress: this.releaseSteering.bind(this) });
+        this.controllerMap.set(65, { pressed: false, funcPress: this.left.bind(this), funcUnPress: this.releaseSteering.bind(this) });
 
         //const point = new CANNON.Vec3(0, 0, 100); // Objetive.
 
@@ -271,71 +278,15 @@ export class Controller {
         }*/
 
 
-        const carConst = {
-            //Motor Force Limit.
-            engineForceLimit: 3000,
-            //Angle Steering.
-            SteeringValLimit: 0.3,
-            //Brake Force.
-            brakeForceLimit: 200
-        };
+
         const phyFolder = gui.addFolder("Car Constants");
-        phyFolder.add(carConst, "engineForceLimit", 0, 10000, 10);
-        phyFolder.add(carConst, "SteeringValLimit", 0, 1, 0.01);
-        phyFolder.add(carConst, "brakeForceLimit", 0, 1000, 10);
+        phyFolder.add(this.carConst, "engineForceLimit", 0, 10000, 10);
+        phyFolder.add(this.carConst, "SteeringValLimit", 0, 1, 0.01);
+        phyFolder.add(this.carConst, "brakeForceLimit", 0, 1000, 10);
         phyFolder.open();
 
-        const EngineForceVal = (value: any) => {
-            //Limit Signal
-            if (value > carConst.engineForceLimit) {
-                value = carConst.engineForceLimit;
-            }
-            if (value < -carConst.engineForceLimit) {
-                value = -carConst.engineForceLimit;
-            }
-            for (let index = 0; index < 4; index++) {
-                this.vehicle.applyEngineForce(value, index);
-            }
-        }
+        
 
-        const BrakeValApplied = (value: any) => {
-            for (let index = 0; index < 2; index++) {
-                this.vehicle.setBrake(value, index);
-            }
-        }
-        const SteeringVal = (value: any) => {
-            this.vehicle.setSteeringValue(value, 2);
-            this.vehicle.setSteeringValue(value, 3);
-        }
-
-        function forward() {
-            EngineForceVal(-carConst.engineForceLimit);
-        }
-        function backward() {
-            EngineForceVal(carConst.engineForceLimit);
-        }
-        function NotEngineForce() {
-            EngineForceVal(0);
-        }
-
-        function brake() {
-            BrakeValApplied(carConst.brakeForceLimit);
-        }
-        function unbrake() {
-            BrakeValApplied(0);
-        }
-
-        function right() {
-            SteeringVal(-carConst.SteeringValLimit);
-        }
-
-        function left() {
-            SteeringVal(carConst.SteeringValLimit);
-        }
-
-        function releaseSteering() {
-            SteeringVal(0);
-        }
 
 
 
@@ -404,7 +355,7 @@ export class Controller {
         requestAnimationFrame(this.render.bind(this));
         this.executeMoves();
         //if (this.stateProgram == 2) { PID_Controller(); }
-        //this.Camera();
+        this.Camera();
         this.renderer.render(this.scene, this.camera);
         this.updatePhysics();
         //UpdateInfo();
@@ -431,8 +382,8 @@ export class Controller {
             }
         }
     }
-    public navigate(e: number) {
-        console.log(e);
+    public navigate(e: KeyboardEvent) {
+        console.log(e);/*
         console.log(this.camera.position.y);
         if (e == 87) {
         this.camera.position.y = this.camera.position.y + 0.1;}
@@ -452,19 +403,19 @@ export class Controller {
             this.camera.position.z = this.camera.position.z - 0.1;
         }  
          if(e == 38){    //accelerate 
-            this.EngineForceValue(-3000);
-         }
-       /* if (e.type == 'keydown') {
-            if (this.controllerMap.get(e.location)) {
-                this.controllerMap.set(e.keyCode, { pressed: true, funcPress: this.controllerMap.get(e.keyCode).funcPress, funcUnPress: this.controllerMap.get(e.keyCode).funcUnPress });
+            this.EngineForceVal(-3000);
+         }*/
+       if (e.type == 'keydown') {
+            if (this.controllerMap.get(e.keyCode)) {
+                this.controllerMap.set(e.keyCode, { pressed: true, funcPress: this.controllerMap.get(e.keyCode)!.funcPress, funcUnPress: this.controllerMap.get(e.keyCode)!.funcUnPress });
             }
             this.changeCamera(e.keyCode);
         }
         if (e.type == 'keyup') {
-            if (this.controllerMap.get(e.keyCode) && this.controllerMap.get(e.keyCode)!= undefined) {
-                this.controllerMap.set(e.keyCode, { pressed: false, funcPress: this.controllerMap.get(e.keyCode).funcPress, funcUnPress: this.controllerMap.get(e.keyCode).funcUnPress });
+            if (this.controllerMap.get(e.keyCode)) {
+                this.controllerMap.set(e.keyCode, { pressed: false, funcPress: this.controllerMap.get(e.keyCode)!.funcPress, funcUnPress: this.controllerMap.get(e.keyCode)!.funcUnPress });
             }
-        }*/
+        }
     }
     public chaseCameraSide() {
         var cameraOffset;
@@ -499,7 +450,7 @@ export class Controller {
                 break;
         }
     }
-    changeCamera(keyCode: number) {
+    public changeCamera(keyCode: number) {
         switch (keyCode) {
             case 49:
                 this.cameraOption = 1;
@@ -510,16 +461,57 @@ export class Controller {
                 break;
         }
     }
-    private EngineForceValue(value: number){
+    private EngineForceVal(value: number){
         //Limit Signal
-        if (value > 3000) {
-            value = 3000;
+        if(value > this.carConst.engineForceLimit){
+            value = this.carConst.engineForceLimit; 
         }
-        if (value < -3000) {
-            value = -3000;
+        if(value < -this.carConst.engineForceLimit){
+            value = -this.carConst.engineForceLimit; 
         }
         for (let index = 0; index < 4; index++) {
-            this.vehicle.applyEngineForce(value, index);
+            this.vehicle.applyEngineForce(value, index); 
         }
+    }
+    
+    private BrakeValApplied(value: number){
+        for (let index = 0; index < 2; index++) {
+            this.vehicle.setBrake(value, index);
+        }
+    }
+    private SteeringVal(value: number){
+        this.vehicle.setSteeringValue(value, 2);
+        this.vehicle.setSteeringValue(value, 3);
+    }
+
+    private forward() {
+        console.log(this);
+        //console.log(this.carConst);
+        this.EngineForceVal(-this.carConst.engineForceLimit);
+    }
+    private backward() {
+        this.EngineForceVal(this.carConst.engineForceLimit);
+    }
+    private NotEngineForce() {
+        this.EngineForceVal(0);
+    }
+
+    private brake() {
+        this.BrakeValApplied(this.carConst.brakeForceLimit);
+    }
+    private unbrake() {
+        this.BrakeValApplied(0);
+    }
+
+    private right() {
+        this.SteeringVal(-this.carConst.SteeringValLimit);
+    }
+
+    private left() {
+        this.SteeringVal(this.carConst.SteeringValLimit);
+    }
+
+    private releaseSteering() {
+        this.SteeringVal(0);
     }
 }

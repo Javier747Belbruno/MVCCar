@@ -25,7 +25,7 @@ export class UserInterface {
             renderer.setSize(w, h);
         })*/
         function navigate(e: KeyboardEvent) {
-            c.navigate(e.keyCode);
+            c.navigate(e);
         } 
           
         //Window Event Listener (Triggers)
