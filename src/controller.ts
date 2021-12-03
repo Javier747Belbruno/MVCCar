@@ -5,8 +5,10 @@ import { GUI } from 'dat.gui';
 
 import {UserInterface} from './userInterface';
 import { World } from './Entities/world';
-import io from 'socket.io-client';
+
 import { State } from './Entities/state';
+
+import Networking from './networking';
 
 export class Controller {
 
@@ -50,6 +52,7 @@ export class Controller {
                                         };
 
     state = new State();
+    networking = new Networking();
 
     public Controller(): void {    
         
@@ -66,43 +69,41 @@ export class Controller {
 
     public init() {
 
-        
-        const socketProtocol = (window.location.protocol.includes('https')) ? 'wss' : 'ws';
-        const socket = io(`${socketProtocol}://localhost:3000`, { reconnection: false });
-        //const connectedPromise = new Promise<void>(resolve => {
-        socket.on('connect', () => {
-            console.log('Connected to server!');
-            //resolve();
-        });
-        //});
+        //CONNECT TO SERVER
+        this.networking.Connect();
+
     
+        //SCENERY
+        // RED PLANE SQUARE
         var geometry = new THREE.PlaneGeometry(10, 10, 10);
         var material = new THREE.MeshBasicMaterial({ color: 0xcc1122, side: THREE.DoubleSide });
         var plane = new THREE.Mesh(geometry, material);
         plane.rotation.x = Math.PI / 2;
         this.scene.add(plane);
-
+        // GREEN PLANE SQUARE
         var geometry = new THREE.PlaneGeometry(10, 10, 10);
         var material = new THREE.MeshBasicMaterial({ color: 0x00ff22, side: THREE.DoubleSide });
         var plane = new THREE.Mesh(geometry, material);
         plane.rotation.x = Math.PI / 2;
         plane.position.set(0, 0, 100);
         this.scene.add(plane);
-
-
+        //SUNLIGHT
         var sunlight = new THREE.DirectionalLight(0xffffff, 1.0);
         sunlight.position.set(-10, 10, 0);
         this.scene.add(sunlight)
+        //GRID HELPER
+        const gridHelper = new THREE.GridHelper(500, 100);
+        this.scene.add(gridHelper)
 
         
-        //Physics
+        //PHYSICS
 
-
+        //INIT WORLD
         this.world.worldCANNON = new CANNON.World();
         this.world.worldCANNON.broadphase = new CANNON.SAPBroadphase(this.world.worldCANNON);
         this.world.worldCANNON.gravity.set(0, -9.81, 0);
         this.world.worldCANNON.defaultContactMaterial.friction = 0;
-
+        //CONTACT MATERIAL
         var groundMaterial = new CANNON.Material('groundMaterial');
         var wheelMaterial = new CANNON.Material('wheelMaterial');
         var wheelGroundContactMaterial = new CANNON.ContactMaterial(wheelMaterial, groundMaterial, {
@@ -112,21 +113,29 @@ export class Controller {
             contactEquationRelaxation: 8,
             frictionEquationStiffness: 1e2
         });
-
         this.world.worldCANNON.addContactMaterial(wheelGroundContactMaterial);
+        //GROUND
+        var q = plane.quaternion;
+        var planeBody = new CANNON.Body({
+            mass: 0, // mass = 0 makes the body static
+            material: groundMaterial,
+            shape: new CANNON.Plane(),
+            quaternion: new CANNON.Quaternion(-q.x, q.y, q.z, q.w)
+        });
+        this.world.worldCANNON.addBody(planeBody);
 
-        // car physics body
+        
+        //VEHICLE
+        // CAR CHASSIS BODY
         var chassisShape = new CANNON.Box(new CANNON.Vec3(1, 0.3, 2));
         this.chassisBody = new CANNON.Body({ mass: 1600 });
         this.chassisBody.addShape(chassisShape);
         this.chassisBody.position.set(0, 1, 0);
         this.chassisBody.angularVelocity.set(0,0, 0); // initial velocity
 
-        //Grid Helper
-        const gridHelper = new THREE.GridHelper(500, 100);
-        this.scene.add(gridHelper)
 
-        // car visual body
+
+        // CAR VISUAL BODY
         var geometry1 = new THREE.BoxGeometry(2, 0.6, 4); // double chasis shape
         var materia1l = new THREE.MeshPhongMaterial({
             color: 0xfffff,
@@ -138,7 +147,7 @@ export class Controller {
         this.box = new THREE.Mesh(geometry1, materia1l);
         this.scene.add(this.box);
 
-        // parent vehicle object
+        // PARENT VEHICLE PHYSICS
         this.vehicle = new CANNON.RaycastVehicle({
             chassisBody: this.chassisBody,
             indexRightAxis: 0, // x
@@ -146,7 +155,7 @@ export class Controller {
             indexForwardAxis: 2, // z
         });
 
-        // wheel options
+        // wheel options connection to body vehicle
         var options = {
             radius: 0.3,
             directionLocal: new CANNON.Vec3(0, -1, 0),
@@ -179,8 +188,7 @@ export class Controller {
 
         this.vehicle.addToWorld(this.world.worldCANNON);
 
-        // car wheels
-
+        // car wheels physics and visuals
         this.vehicle.wheelInfos.forEach( (wheel: any) => {
             var shape = new CANNON.Cylinder(wheel.radius, wheel.radius, wheel.radius / 2, 20);
             var body = new CANNON.Body({ mass: 8, material: wheelMaterial });
@@ -216,16 +224,9 @@ export class Controller {
             }
         });
 */
-        var q = plane.quaternion;
-        var planeBody = new CANNON.Body({
-            mass: 0, // mass = 0 makes the body static
-            material: groundMaterial,
-            shape: new CANNON.Plane(),
-            quaternion: new CANNON.Quaternion(-q.x, q.y, q.z, q.w)
-        });
-        this.world.worldCANNON.addBody(planeBody);
 
     }
+
     public getRenderer(): THREE.Renderer {
         return this.renderer;
     }
