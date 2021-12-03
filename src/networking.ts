@@ -1,15 +1,21 @@
-import io from 'socket.io-client';
+import io, { Socket } from 'socket.io-client';
 
 export default class Networking {
     
+    socket!: Socket;
+
     Connect() {
         const socketProtocol = (window.location.protocol.includes('https')) ? 'wss' : 'ws';
-        const socket = io(`${socketProtocol}://localhost:3000`, { reconnection: false });
+        this.socket = io(`${socketProtocol}://localhost:3000`, { reconnection: false });
         //const connectedPromise = new Promise<void>(resolve => {
-        socket.on('connect', () => {
+        this.socket.on('connect', () => {
             console.log('Connected to server!');
             //resolve();
         });
         //});
+    }
+
+    Play(username : string){
+        this.socket.emit('join_game', username);
     }
   }

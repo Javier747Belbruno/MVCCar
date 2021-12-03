@@ -71,7 +71,7 @@ export class Controller {
 
         //CONNECT TO SERVER
         this.networking.Connect();
-
+        this.networking.Play("Javier");
     
         //SCENERY
         // RED PLANE SQUARE
@@ -95,36 +95,10 @@ export class Controller {
         const gridHelper = new THREE.GridHelper(500, 100);
         this.scene.add(gridHelper)
 
-        
-        //PHYSICS
+        //PHYSIC WORLD INIT
+        this.world.init(/*plane.quaternion.x, plane.quaternion.y, plane.quaternion.z, plane.quaternion.w*/);
 
-        //INIT WORLD
-        this.world.worldCANNON = new CANNON.World();
-        this.world.worldCANNON.broadphase = new CANNON.SAPBroadphase(this.world.worldCANNON);
-        this.world.worldCANNON.gravity.set(0, -9.81, 0);
-        this.world.worldCANNON.defaultContactMaterial.friction = 0;
-        //CONTACT MATERIAL
-        var groundMaterial = new CANNON.Material('groundMaterial');
-        var wheelMaterial = new CANNON.Material('wheelMaterial');
-        var wheelGroundContactMaterial = new CANNON.ContactMaterial(wheelMaterial, groundMaterial, {
-            friction: 2,
-            restitution: 5,
-            contactEquationStiffness: 1e2,
-            contactEquationRelaxation: 8,
-            frictionEquationStiffness: 1e2
-        });
-        this.world.worldCANNON.addContactMaterial(wheelGroundContactMaterial);
-        //GROUND
-        var q = plane.quaternion;
-        var planeBody = new CANNON.Body({
-            mass: 0, // mass = 0 makes the body static
-            material: groundMaterial,
-            shape: new CANNON.Plane(),
-            quaternion: new CANNON.Quaternion(-q.x, q.y, q.z, q.w)
-        });
-        this.world.worldCANNON.addBody(planeBody);
 
-        
         //VEHICLE
         // CAR CHASSIS BODY
         var chassisShape = new CANNON.Box(new CANNON.Vec3(1, 0.3, 2));
@@ -188,6 +162,7 @@ export class Controller {
 
         this.vehicle.addToWorld(this.world.worldCANNON);
 
+        var wheelMaterial = new CANNON.Material('wheelMaterial');
         // car wheels physics and visuals
         this.vehicle.wheelInfos.forEach( (wheel: any) => {
             var shape = new CANNON.Cylinder(wheel.radius, wheel.radius, wheel.radius / 2, 20);
@@ -278,9 +253,9 @@ export class Controller {
 
 
 
-        var initialTime = Date.now();
+        //var initialTime = Date.now();
         //var CurrentTime: string;
-        console.log("Initial Times: " + initialTime);
+        //console.log("Initial Times: " + initialTime);
         if (this.stateProgram == 2) {
             setTimeout(() => {
                 this.render();
@@ -436,7 +411,7 @@ export class Controller {
     }
 
     private forward() {
-        console.log(this);
+        //console.log(this);
         //console.log(this.carConst);
         this.EngineForceVal(-this.carConst.engineForceLimit);
     }
