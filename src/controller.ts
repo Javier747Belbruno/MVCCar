@@ -6,6 +6,7 @@ import { GUI } from 'dat.gui';
 import {UserInterface} from './userInterface';
 import { World } from './Entities/world';
 import io from 'socket.io-client';
+import { State } from './Entities/state';
 
 export class Controller {
 
@@ -31,6 +32,25 @@ export class Controller {
         brakeForceLimit: 200
     };
 
+    public static readonly PLAYER_RADIUS: 20;
+    public static readonly PLAYER_MAX_HP: 100;
+    public static readonly PLAYER_SPEED: 400;
+    public static readonly PLAYER_FIRE_COOLDOWN: 0.25;
+    public static readonly BULLET_RADIUS: 3;
+    public static readonly BULLET_SPEED: 800;
+    public static readonly BULLET_DAMAGE: 10;
+    public static readonly SCORE_BULLET_HIT: 20;
+    public static readonly SCORE_PER_SECOND: 1;
+    public static readonly MAP_SIZE: 3000;
+    public static readonly MSG_TYPES: {
+                                        JOIN_GAME: 'join_game',
+                                        GAME_UPDATE: 'update',
+                                        INPUT: 'input',
+                                        GAME_OVER: 'dead',
+                                        };
+
+    state = new State();
+
     public Controller(): void {    
         
     }
@@ -46,7 +66,7 @@ export class Controller {
 
     public init() {
 
-
+        
         const socketProtocol = (window.location.protocol.includes('https')) ? 'wss' : 'ws';
         const socket = io(`${socketProtocol}://localhost:3000`, { reconnection: false });
         //const connectedPromise = new Promise<void>(resolve => {
@@ -181,7 +201,7 @@ export class Controller {
             this.wheelVisuals.push(cylinder);
             this.scene.add(cylinder);
         });
-
+/*
         // update the wheels to match the physics
         this.world.worldCANNON.addEventListener('postStep',  () => {
             for (var i = 0; i < this.vehicle.wheelInfos.length; i++) {
@@ -195,7 +215,7 @@ export class Controller {
                 this.wheelVisuals[i].quaternion.copy(t.quaternion);
             }
         });
-
+*/
         var q = plane.quaternion;
         var planeBody = new CANNON.Body({
             mass: 0, // mass = 0 makes the body static
@@ -278,7 +298,29 @@ export class Controller {
         this.executeMoves();
         this.Camera();
         this.renderer.render(this.scene, this.camera);
-        this.updatePhysics();
+        if(this.cameraOption==1){
+        this.updatePhysics();}
+        this.state.getCurrentState();
+        /*
+        const { me, others, bullets } = getCurrentState();
+        if (!me) {
+            return;
+        }
+
+        // Draw background
+        renderBackground(me.x, me.y);
+
+        // Draw boundaries
+        context.strokeStyle = 'black';
+        context.lineWidth = 1;
+        context.strokeRect(canvas.width / 2 - me.x, canvas.height / 2 - me.y, MAP_SIZE, MAP_SIZE);
+
+        // Draw all bullets
+        bullets.forEach(renderBullet.bind(null, me));
+
+        // Draw all players
+        renderPlayer(me, me);
+        others.forEach(renderPlayer.bind(null, me));*/
     }
     
     private updatePhysics(){
@@ -287,6 +329,16 @@ export class Controller {
         this.box.position.copy(new THREE.Vector3(this.chassisBody.position.x, this.chassisBody.position.y, this.chassisBody.position.z));
         this.box.quaternion.copy(new THREE.Quaternion(this.chassisBody.quaternion.x, this.chassisBody.quaternion.y, this.chassisBody.quaternion.z, this.chassisBody.quaternion.w));
         //console.log(this.box.position);
+        for (var i = 0; i < this.vehicle.wheelInfos.length; i++) {
+            this.vehicle.updateWheelTransform(i);
+            var t = this.vehicle.wheelInfos[i].worldTransform;
+            // update wheel physics
+            this.wheelBodies[i].position.copy(t.position);
+            this.wheelBodies[i].quaternion.copy(t.quaternion);
+            // update wheel visuals
+            this.wheelVisuals[i].position.copy(t.position);
+            this.wheelVisuals[i].quaternion.copy(t.quaternion);
+        }
     }
     
     private executeMoves() {
